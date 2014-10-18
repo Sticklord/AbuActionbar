@@ -451,7 +451,7 @@ local function LoadBinder()
 	-- Registering
 	local stance = StanceButton1:GetScript("OnClick")
 	local pet = PetActionButton1:GetScript("OnClick")
-	local button = SecureActionButton_OnClick
+	local button = ActionButton1:GetScript("OnClick")
 	local function register(val)
 		if val.IsProtected and val.GetObjectType and val.GetScript and val:GetObjectType()=="CheckButton" and val:IsProtected() then
 			local script = val:GetScript("OnClick")

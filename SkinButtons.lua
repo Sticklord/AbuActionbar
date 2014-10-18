@@ -244,48 +244,6 @@ local function MultiCastActionButton(button) -- OUTDATED
 	StyledButts[button:GetName()] = true
 end
 
-function _G.ActionButton_OnUpdate (self, elapsed)
-	if ( ActionButton_IsFlashing(self) ) then
-		local flashtime = self.flashtime;
-		flashtime = flashtime - elapsed;
-		 
-		if ( flashtime <= 0 ) then
-			local overtime = -flashtime;
-			if ( overtime >= ATTACK_BUTTON_FLASH_TIME ) then
-				overtime = 0;
-			end
-			flashtime = ATTACK_BUTTON_FLASH_TIME - overtime;
- 
-			local flashTexture = _G[self:GetName().."Flash"];
-			if ( flashTexture:IsShown() ) then
-				flashTexture:Hide();
-			else
-				flashTexture:Show();
-			end
-		end
-		 
-		self.flashtime = flashtime;
-	end
-	-- Handle range indicator
-	local rangeTimer = self.rangeTimer;
-	if (rangeTimer) then
-		rangeTimer = rangeTimer - elapsed
-		if (rangeTimer <= 0.1) then
-			local isInRange = false
-			if (ActionHasRange(self.action) and IsActionInRange(self.action) == 0) then
-				_G[self:GetName()..'Icon']:SetVertexColor(unpack(Color.OutOfRange))
-				isInRange = true
-			end
-			if (self.isInRange ~= isInRange) then
-				self.isInRange = isInRange
-				ActionButton_UpdateUsable(self)
-			end
-			rangeTimer = TOOLTIP_UPDATE_TIME
-		end
-		self.rangeTimer = rangeTimer
-	end
-end
-
 local function ShowGrid(self)
     local normal = _G[self:GetName()..'NormalTexture']
     if (normal) then
@@ -300,23 +258,42 @@ local function ActionButton_UpdateUseable(self)
     end
 
     local isUsable, notEnoughMana = IsUsableAction(self.action)
+    local icon = _G[self:GetName().."Icon"]
     if (isUsable) then
-        _G[self:GetName()..'Icon']:SetVertexColor(1, 1, 1, 1)
+    	if self.isInRange == false then
+    		return icon:SetVertexColor(Color.OutOfRange[1], Color.OutOfRange[2], Color.OutOfRange[3])
+    	else
+        	return icon:SetVertexColor(1, 1, 1, 1)
+        end
     elseif (notEnoughMana) then
-        _G[self:GetName()..'Icon']:SetVertexColor(unpack(Color.OutOfMana))
+        return icon:SetVertexColor(Color.OutOfMana[1], Color.OutOfMana[2], Color.OutOfMana[3])
     else
-        _G[self:GetName()..'Icon']:SetVertexColor(unpack(Color.NotUsable))
+        return icon:SetVertexColor(Color.NotUsable[1], Color.NotUsable[2], Color.NotUsable[3])
     end
 end
 
-local function ActionButton_Update(button)
+local function ActionButton_Update(button, e)
 	local name = button:GetName()
+
 	if name:find('MultiCast') then
 		return;
 	elseif name:find('ExtraActionButton') then 
 		return; 
 	end
 	button:SetNormalTexture(Texture.Normal)
+end
+
+local TOOLTIP_UPDATE_TIME = _G.TOOLTIP_UPDATE_TIME
+local function ActionButton_OnUpdate(button, e)
+	local rangeTimer = button.rangeTimer
+	if (rangeTimer and rangeTimer == TOOLTIP_UPDATE_TIME) then
+		local isInRange = IsActionInRange(button.action)
+
+		if (button.isInRange ~= isInRange) then
+			button.isInRange = isInRange
+			ActionButton_UpdateUseable(button)
+		end
+    end
 end
 
 -- For shwowing keybinds when entering binding mode
@@ -359,19 +336,8 @@ local function LoadSkins()
 		PetStancePossessButton(_G["PossessButton"..i])
 	end
 
-	-- MulticastButtons - outdated
-	--for i = 1, 12 do
-	--	MultiCastActionButton(_G["MultiCastActionButton"..i])
-	--end
-	--MultiCastActionButton(_G['MultiCastRecallSpellButton'])
-	--MultiCastActionButton(_G['MultiCastSummonSpellButton'])
-
---	LeaveVehicleButton()
-
-	--StyleExtraActionButton(ExtraActionButton1)
-
 	hooksecurefunc("ActionButton_Update", ActionButton_Update)
-
+	hooksecurefunc("ActionButton_OnUpdate", ActionButton_OnUpdate)
 	hooksecurefunc("ActionButton_UpdateUsable", ActionButton_UpdateUseable)
 
 	-- Showgrid hides border, lets fix
