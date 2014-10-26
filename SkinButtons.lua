@@ -1,6 +1,8 @@
 local _, ns = ...
 
 local _G, pairs, unpack = _G, pairs, unpack
+local IsActionInRange = _G.IsActionInRange
+local IsUsableAction = _G.IsUsableAction
 
 local Color = {
 	Normal = { 1, 1, 1 , 1},
@@ -60,32 +62,51 @@ local function CreateBackGround(button, makeBG, fBG)
 	end
 end
 
-local function ActionButtonUpdateHotkey(self)
+local GetKeyText
+do
+	local displaySubs = {
+		['s%-'] 			= 's',
+		['a%-'] 			= 'a',
+		['c%-'] 			= 'c',
+		['st%-']			= 'c',
+		['Mouse Button ']	= 'M',
+		KEY_MOUSEWHEELUP 	= 'wU',
+		KEY_MOUSEWHEELDOWN	= 'wD',
+		['Middle Mouse']	= 'M3',
+		['KEY_NUMLOCK'] 	= 'nL',
+		['Num Pad '] 		= 'n',
+		KEY_PAGEUP 			= 'pU',
+		KEY_PAGEDOWN 		= 'pD',
+		KEY_SPACE 			= 'Sp',
+		KEY_INSERT			= 'Ins',
+		KEY_HOME 			= 'Hm',
+		KEY_DELETE			= 'Del',
+		["PLUS"]    		= "+",
+		["MINUS"]   		= "-",
+		["MULTIPLY"]		= "*",
+		["DIVIDE"]  		= "/",
+		["DECIMAL"] 		= ".",
+	}
+	local gsub = string.gsub
+	function GetKeyText(key)
+		if not key then
+			return ""
+		end
+		for k, v in pairs(displaySubs) do
+			key = gsub(key, k, v)
+		end
+		return key
+	end
+end
+
+local function ActionButtonUpdateHotkey(self, type)
 	local hotkey = _G[self:GetName()..'HotKey']
 	local text = hotkey:GetText()
 	if not hotkey then return end
 	if (not IsSpecificButton(self, 'OverrideActionBarButton')) then
-		if cfg.Actionbar.showKeybinds or ns.Binder:IsInBindingMode() then
+		if cfg.Actionbar.showKeybinds or ns.Binder.shouldShowBindings then
 			if text and text ~= '' then
-				text = gsub(text, 's%-', 's');
-				text = gsub(text, 'a%-', 'a');
-				text = gsub(text, 'c%-', 'c');
-				text = gsub(text, 'st%-', 'c');
-				text = gsub(text, 'Mouse Button ', 'M');
-				text = gsub(text, KEY_MOUSEWHEELUP, 'wU');
-				text = gsub(text, KEY_MOUSEWHEELDOWN, 'wD');
-				text = gsub(text, 'Middle Mouse', 'M3')
-
-				text = gsub(text, KEY_NUMLOCK, 'nL');
-
-				text = gsub(text, 'Num Pad ', 'n');
-				text = gsub(text, KEY_PAGEUP, 'pU');
-				text = gsub(text, KEY_PAGEDOWN, 'pD');
-				text = gsub(text, KEY_SPACE, 'Sp');
-				text = gsub(text, KEY_INSERT, 'Ins');
-				text = gsub(text, KEY_HOME, 'Hm');
-				text = gsub(text, KEY_DELETE, 'Del');
-				hotkey:SetText(text)
+				hotkey:SetText(GetKeyText(text))
 			end
 			hotkey:Show()
 		else
@@ -245,31 +266,31 @@ local function MultiCastActionButton(button) -- OUTDATED
 end
 
 local function ShowGrid(self)
-    local normal = _G[self:GetName()..'NormalTexture']
-    if (normal) then
-        normal:SetAlpha(1) 
-    end
+	local normal = _G[self:GetName()..'NormalTexture']
+	if (normal) then
+		normal:SetAlpha(1) 
+	end
 end
 
-local function ActionButton_UpdateUseable(self)
-    local normal = _G[self:GetName()..'NormalTexture']
-    if (normal) then
-        normal:SetVertexColor(unpack(Color.Normal)) 
-    end
+local function ActionButton_UpdateUsable(self)
+	local normal = _G[self:GetName()..'NormalTexture']
+	if (normal) then
+		normal:SetVertexColor(unpack(Color.Normal)) 
+	end
 
-    local isUsable, notEnoughMana = IsUsableAction(self.action)
-    local icon = _G[self:GetName().."Icon"]
-    if (isUsable) then
-    	if self.isInRange == false then
-    		return icon:SetVertexColor(Color.OutOfRange[1], Color.OutOfRange[2], Color.OutOfRange[3])
-    	else
-        	return icon:SetVertexColor(1, 1, 1, 1)
-        end
-    elseif (notEnoughMana) then
-        return icon:SetVertexColor(Color.OutOfMana[1], Color.OutOfMana[2], Color.OutOfMana[3])
-    else
-        return icon:SetVertexColor(Color.NotUsable[1], Color.NotUsable[2], Color.NotUsable[3])
-    end
+	local isUsable, notEnoughMana = IsUsableAction(self.action)
+	local icon = _G[self:GetName().."Icon"]
+	if (isUsable) then
+		if self.isInRange == false then
+			return icon:SetVertexColor(Color.OutOfRange[1], Color.OutOfRange[2], Color.OutOfRange[3])
+		else
+			return icon:SetVertexColor(1, 1, 1, 1)
+		end
+	elseif (notEnoughMana) then
+		return icon:SetVertexColor(Color.OutOfMana[1], Color.OutOfMana[2], Color.OutOfMana[3])
+	else
+		return icon:SetVertexColor(Color.NotUsable[1], Color.NotUsable[2], Color.NotUsable[3])
+	end
 end
 
 local function ActionButton_Update(button, e)
@@ -291,14 +312,13 @@ local function ActionButton_OnUpdate(button, e)
 
 		if (button.isInRange ~= isInRange) then
 			button.isInRange = isInRange
-			ActionButton_UpdateUseable(button)
+			ActionButton_UpdateUsable(button)
 		end
-    end
+	end
 end
 
 -- For shwowing keybinds when entering binding mode
-function ns.ToggleBindings()
-	if cfg.Actionbar.showKeybinds == true then return; end -- No need to update
+function ns.ToggleBindings(enable)
 	for _, name in pairs({'PetActionButton','PossessButton','StanceButton','ActionButton',"MultiBarBottomLeftButton",
 						"MultiBarBottomRightButton","MultiBarRightButton","MultiBarLeftButton"}) do
 		for i = 1, 12 do
@@ -338,7 +358,7 @@ local function LoadSkins()
 
 	hooksecurefunc("ActionButton_Update", ActionButton_Update)
 	hooksecurefunc("ActionButton_OnUpdate", ActionButton_OnUpdate)
-	hooksecurefunc("ActionButton_UpdateUsable", ActionButton_UpdateUseable)
+	hooksecurefunc("ActionButton_UpdateUsable", ActionButton_UpdateUsable)
 
 	-- Showgrid hides border, lets fix
 	hooksecurefunc("ActionButton_ShowGrid", ShowGrid)
@@ -355,6 +375,7 @@ local function LoadSkins()
 		end
 	end
 	SpellFlyout:HookScript("OnShow", DetectFlyouts)
+
 
 end
 

@@ -100,10 +100,10 @@ end
 local function SetupBars()
 	local function EnableFading(frame, element)
 	    frame:HookScript('OnEnter', function()
-	        securecall('UIFrameFadeIn', element, 0.2, element:GetAlpha(), 1)
+	        securecall('UIFrameFadeIn', element, 0.2, element:GetAlpha() or 0, 1)
 	    end)
 	    frame:HookScript('OnLeave', function()
-	        securecall('UIFrameFadeOut', element, 0.2, element:GetAlpha(), 0) 
+	        securecall('UIFrameFadeOut', element, 0.2, element:GetAlpha() or 1, 0) 
 	    end)
 	end
 
@@ -181,15 +181,24 @@ local function EnableMouseOverBars()
 		Bar_OnLeave(bar)
 	end
 
-	--  [[  Fading for the 2 bars on the right side  ]]  --
 	for name, key in pairs(BARS_ON_MOUSEOVER) do
 		local bar = _G[name]
 		if bar and key then
+			-- hook for cooldown alpha
+			hooksecurefunc(bar, "SetAlpha", function(self, alpha)
+				local name = self:GetName()
+				alpha = alpha * .7
+				for i = 1, 12 do
+					_G[name..'Button'..i].cooldown:SetSwipeColor(0,0,0,alpha)
+				end
+			end)
+
 			bar:EnableMouse(true) -- So it doesnt hide when mouse is between buttons
 			bar:HookScript("OnEnter", Bar_OnEnter)
 			bar:HookScript("OnLeave", Bar_OnLeave)
 			bar:Show()
 			bar:SetAlpha(0)
+
 			for i = 1, 12 do
 				local button = _G[name..'Button'..i]
 				button:HookScript("OnEnter", Button_OnEnter)

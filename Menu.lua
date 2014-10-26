@@ -7,9 +7,29 @@ local cfg = ns.Config
 local AMM = CreateFrame("Frame", "AbuMicroMenu", UIParent)
 local button = CreateFrame('Button', nil, UIParent)
 local nop = function() end
+local BUTTONS
 
-local BUTTONS = {
-}
+local function CreateDefaultList()
+	local list = {}
+
+	local prof1, prof2, archaeology, fishing, cooking, firstAid = GetProfessions()
+
+	for i, skill in pairs({prof1, prof2, cooking}) do
+		local button = {}
+		local name, texture = GetProfessionInfo(skill)
+
+		button.IsPlugin = true
+	    button.icon = texture
+		button.addon = name
+		button.OnMouseDown = nop
+		button.OnMouseUp = nop
+
+		button.OnClick = function() CastSpellByName(name) end
+
+		list[name] = button
+	end
+	return list
+end
 
 local function SlideOutFrame()
 	if not AMM:IsMouseOver() then
@@ -90,6 +110,9 @@ end
 local lastbutton = nil;
 local num = 0
 function AMM:UpdateButtons()
+	if not BUTTONS then
+		BUTTONS = CreateDefaultList()
+	end
 	for addon, v in pairs(BUTTONS) do
 		if not self.loadedbuttons[addon] and (IsAddOnLoaded(addon) or v.IsPlugin) then
 			if num >= 12 then return; end
@@ -228,6 +251,13 @@ local function Init()
 		if (not isStacked) then
 			CharacterMicroButton:ClearAllPoints()
 			CharacterMicroButton:SetPoint('TOPLEFT', AMM, 0, -18)
+			for k,button in pairs(AMM.loadedbuttons) do
+				button:Show()
+			end
+		else
+			for k,button in pairs(AMM.loadedbuttons) do
+				button:Hide()
+			end
 		end
 	end)
 

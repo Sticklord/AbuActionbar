@@ -22,18 +22,29 @@ local _G = getfenv(0)
 local GetKeyText
 do
 	local displaySubs = {
-		["ALT%-"]      = "a",
-		["CTRL%-"]     = "c",
-		["SHIFT%-"]    = "s",
-		["BUTTON"]     = "m",
-		["MOUSEWHEEL"] = "w",
-		["NUMPAD"]     = "n",
-		["PLUS"]       = "+",
-		["MINUS"]      = "-",
-		["MULTIPLY"]   = "*",
-		["DIVIDE"]     = "/",
-		["DECIMAL"]    = ".",
+		['s%-'] 			= 's',
+		['a%-'] 			= 'a',
+		['c%-'] 			= 'c',
+		['st%-']			= 'c',
+		['Mouse Button ']	= 'M',
+		KEY_MOUSEWHEELUP 	= 'wU',
+		KEY_MOUSEWHEELDOWN	= 'wD',
+		['Middle Mouse']	= 'M3',
+		['KEY_NUMLOCK'] 	= 'nL',
+		['Num Pad '] 		= 'n',
+		KEY_PAGEUP 			= 'pU',
+		KEY_PAGEDOWN 		= 'pD',
+		KEY_SPACE 			= 'Sp',
+		KEY_INSERT			= 'Ins',
+		KEY_HOME 			= 'Hm',
+		KEY_DELETE			= 'Del',
+		["PLUS"]    		= "+",
+		["MINUS"]   		= "-",
+		["MULTIPLY"]		= "*",
+		["DIVIDE"]  		= "/",
+		["DECIMAL"] 		= ".",
 	}
+	local gsub = string.gsub
 	function GetKeyText(key)
 		if not key then
 			return ""
@@ -211,7 +222,12 @@ function Binder:StartBinding()
 	ns.Print('Starting binding mode.')
 	self.isBinding = true
 	self:UpdateButtons()
-	ns.ToggleBindings()
+end
+
+function Binder:ShowBindings(enable)
+	if self.isBinding then return; end
+	self.shouldShowBindings = enable
+	ns.ToggleBindings(enable)
 end
 
 function Binder:StopBinding(save)
@@ -226,7 +242,6 @@ function Binder:StopBinding(save)
 		self.isBinding = false
 		self:HideFrame()
 		self:UnregisterEvent("PLAYER_REGEN_DISABLED")
-		ns.ToggleBindings()
 	end
 	self:UpdateButtons()
 end
@@ -338,9 +353,11 @@ local function SetupMacroButton()
 	Binder:UpdateButtons()
 
 	hooksecurefunc("MacroFrame_Update", Binder.UpdateMacroText)
+	MacroFrame:HookScript("OnShow", function() Binder:ShowBindings(true) end)
 	MacroFrame:HookScript("OnHide", function(self)
 		if (not SpellBookFrame:IsShown()) then
 			Binder:StopBinding(false)
+			Binder:ShowBindings(false)
 		end
 	end)
 end
@@ -371,9 +388,11 @@ local function SetupSpellButton()
 		Binder:UpdateSpellText()
 	end)
 
+	SpellBookFrame:HookScript("OnShow", function() Binder:ShowBindings(true) end)
 	SpellBookFrame:HookScript("OnHide", function(self)
-		if (not MacroFrame) or (MacroFrame and not MacroFrame:IsShown()) then
+		if (not MButton) or (MButton and not MacroFrame:IsShown()) then
 			Binder:StopBinding(false)
+			Binder:ShowBindings(false)
 		end
 	end)
 end
