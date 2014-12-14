@@ -121,7 +121,7 @@ function AMM:UpdateButtons()
 			num = num + 1
 
 			if lastbutton then
-				button:SetPoint("TOPLEFT", lastbutton, "TOPRIGHT", -3, 0)
+				button:SetPoint("TOPLEFT", lastbutton, "TOPRIGHT", -2.2, 0)
 			else
 				button:SetPoint("BOTTOMLEFT", CharacterMicroButton, "TOPLEFT", 0, -20)
 			end
