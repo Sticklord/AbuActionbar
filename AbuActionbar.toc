@@ -3,6 +3,9 @@
 ## Author: Abu
 ## RequiredDeps: AbuEssentials
 
+libs\AbuTheLib.lua
+CONFIG.lua
+
 ActionBar.lua
 Binder.lua
 Menu.lua

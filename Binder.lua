@@ -123,8 +123,8 @@ end
 
 local function SetBindings(b, key, command)
 	SetBinding(key, command)
-	if cfg.Actionbar.PrintBindings then
-		ns.Print(key.." bound to "..b.name..".")
+	if cfg.PrintBindings then
+		ns:Print(key.." bound to "..b.name..".")
 	end
 end
 
@@ -133,8 +133,8 @@ local function ClearBindings(b, keys)
 		for i, key in ipairs(keys) do
 			SetBinding(key)
 		end
-		if cfg.Actionbar.PrintBindings then
-			ns.Print('Cleared all bindings for: '..b.name..".")
+		if cfg.PrintBindings then
+			ns:Print('Cleared all bindings for: '..b.name..".")
 		end
 	end
 end
@@ -217,9 +217,9 @@ function Binder:Listener(key)
 end
 
 function Binder:StartBinding()
-	if InCombatLockdown() then return ns.Print("Can't bind in combat!") end
+	if InCombatLockdown() then return ns:Print("Can't bind in combat!") end
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
-	ns.Print('Starting binding mode.')
+	ns:Print('Starting binding mode.')
 	self.isBinding = true
 	self:UpdateButtons()
 end
@@ -227,17 +227,17 @@ end
 function Binder:ShowBindings(enable)
 	if self.isBinding then return; end
 	self.shouldShowBindings = enable
-	ns.ToggleBindings(enable)
+	ns:ToggleBindings(enable)
 end
 
 function Binder:StopBinding(save)
 	if self.isBinding then
 		if save then
 			SaveBindings(2)
-			ns.Print('Bindings |cff00ff00saved|r.')
+			ns:Print('Bindings |cff00ff00saved|r.')
 		else
 			LoadBindings(2)
-			ns.Print('Bindings |cffff0000discarded|r.')
+			ns:Print('Bindings |cffff0000discarded|r.')
 		end
 		self.isBinding = false
 		self:HideFrame()
@@ -500,4 +500,4 @@ local function LoadBinder()
 	self.loaded = true
 end
 
-ns.RegisterEvent("PLAYER_LOGIN", LoadBinder)
+ns:RegisterEvent("PLAYER_LOGIN", LoadBinder)

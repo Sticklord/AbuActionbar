@@ -1,10 +1,8 @@
 
 local _, ns = ...
-setmetatable(ns, { __index = ABUADDONS })
-local cfg = ns.Config.Actionbar
+local cfg = ns.Config
 local playerClass
 
-local BARS_ON_MOUSEOVER = cfg.fadeOutBars
 local FRAMES_DISABLE_MOVEMENT = {
 	'MultiBarLeft',
 	'MultiBarRight',
@@ -50,8 +48,10 @@ local function CreateShortBars()
 			object:SetScript('OnEnter', nil)
 			object:SetScript('OnLeave', nil)
 			object:SetScript('OnClick', nil)
+		else
+			object.Show = object.Hide
 		end
-		ns.Kill(object)
+		object:Hide()
 	end
 	--  [[  Shorten textures  ]]  --
 	for _, name in pairs(SHORTEN_FRAMES) do
@@ -62,7 +62,8 @@ local function CreateShortBars()
 
 	for i = 1, 19, 2 do
 	    for _, object in pairs({_G['MainMenuXPBarDiv'..i]}) do
-	        ns.Kill(object)
+	        object.Show = object.Hide
+	        object:Hide()
 	    end
 	end
 
@@ -122,8 +123,6 @@ local function SetupBars()
     --  [[  Pet Bar  ]]  --
 	PetActionBarFrame:EnableMouse(false)
 	PetActionBarFrame:SetFrameStrata('HIGH')
-	--PetActionBar_UpdatePositionValues = function() end
-
     PetActionButton1:ClearAllPoints()
 	PetActionButton1:SetPoint('BOTTOMLEFT', UIParent, 'BOTTOMLEFT', 19, 7)
 
@@ -138,8 +137,14 @@ local function SetupBars()
 			button.EnableMouse = function() end
 		end
 	end
-	--StanceBarFrame:SetFrameStrata('HIGH')
-    --StanceBarFrame:SetPoint('BOTTOMLEFT', UIParent, 'BOTTOMLEFT', 15, 9)
+    hooksecurefunc(StanceBarFrame, "SetPoint", function(self, ...)
+    	if InCombatLockdown() then return; end
+    	local point, anchor, rpoint, x, y = ...
+
+    	if MultiBarBottomRight:IsVisible() and y < 80 then
+    		self:SetPoint(point, anchor, rpoint, x, y + 45)
+    	end
+    end)
 
 	--  [[  MultiBarRight  ]]  --
 	MultiBarRight:ClearAllPoints()
@@ -162,12 +167,12 @@ local hookedButts = {} -- Holds which flyoutbuttons are hooked, nor sure if necc
 local function EnableMouseOverBars()
 	-- Custom UIFrameFadeIn/Out(frame, time, startA, endA, holdTime)
 	local function Bar_OnEnter(bar)
-		ns.UIFrameFadeIn(bar, 0.4, bar:GetAlpha(), 1)
+		AbuGlobal.UIFrameFadeIn(bar, 0.4, bar:GetAlpha(), 1)
 	end
 
 	local function Bar_OnLeave(bar)
 		if not bar:IsMouseOver() then -- In case mouse went from bar to button or vice
-			ns.UIFrameFadeOut(bar, 0.4, 1, 0, 2)
+			AbuGlobal.UIFrameFadeOut(bar, 0.4, 1, 0, 2)
 		end
 	end
 
@@ -181,7 +186,7 @@ local function EnableMouseOverBars()
 		Bar_OnLeave(bar)
 	end
 
-	for name, key in pairs(BARS_ON_MOUSEOVER) do
+	for name, key in pairs(cfg.FadeOutBars) do
 		local bar = _G[name]
 		if bar and key then
 			-- hook for cooldown alpha
@@ -218,7 +223,7 @@ local function EnableMouseOverBars()
 					local flyOut = self:GetParent()
 					if flyOut.isActionBar then
 						local parentBar = flyOut:GetParent():GetParent()
-						if not BARS_ON_MOUSEOVER[parentBar:GetName()] then return end
+						if not cfg.FadeOutBars[parentBar:GetName()] then return end
 						Bar_OnEnter(parentBar)
 					end
 				end)
@@ -226,7 +231,7 @@ local function EnableMouseOverBars()
 					local flyOut = self:GetParent()
 					if flyOut.isActionBar then
 						local parentBar = flyOut:GetParent():GetParent()
-						if not BARS_ON_MOUSEOVER[parentBar:GetName()] then return end
+						if not cfg.FadeOutBars[parentBar:GetName()] then return end
 						Bar_OnLeave(parentBar)
 					end
 				end)
@@ -237,14 +242,14 @@ local function EnableMouseOverBars()
 	SpellFlyout:HookScript("OnEnter", function(self)
 		if self.isActionBar then
 			local parentBar = self:GetParent():GetParent()
-			if not BARS_ON_MOUSEOVER[parentBar:GetName()] then return end
+			if not cfg.FadeOutBars[parentBar:GetName()] then return end
 			Bar_OnEnter(parentBar)
 		end
 	end)
 	SpellFlyout:HookScript("OnLeave", function(self)
 		if self.isActionBar then
 			local parentBar = self:GetParent():GetParent()
-			if not BARS_ON_MOUSEOVER[parentBar:GetName()] then return end
+			if not cfg.FadeOutBars[parentBar:GetName()] then return end
 			Bar_OnLeave(parentBar)
 		end
 	end)
@@ -257,4 +262,4 @@ local function LoadActionBars()
 	EnableMouseOverBars()
 end
 
-ns.RegisterEvent("PLAYER_LOGIN", LoadActionBars)
+ns:RegisterEvent("PLAYER_LOGIN", LoadActionBars)

@@ -1,6 +1,5 @@
 
 local _, ns = ...
-local cfg = ns.Config
 
 -- A simple, SIMPLE LDB
 
@@ -33,7 +32,7 @@ end
 
 local function SlideOutFrame()
 	if not AMM:IsMouseOver() then
-		AMM:AnimationSlideReturn(2)
+		AMM:AnimationSlideReturn(5)
 	end
 end
 
@@ -269,7 +268,7 @@ local function Init()
         end
     end
 
-	ns.SetupFrameForSliding(self, .5, 'Y', 100)
+	AbuGlobal.SetupFrameForSliding(self, .5, 'Y', 100)
 
 	self:RegisterEvent("ADDON_LOADED")
 	self:SetScript("OnEvent", self.UpdateButtons)
@@ -291,4 +290,4 @@ local function Init()
 	end
 end
 
-ns.RegisterEvent("PLAYER_LOGIN", Init)
+ns:RegisterEvent("PLAYER_LOGIN", Init)

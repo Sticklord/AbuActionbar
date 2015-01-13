@@ -1,4 +1,5 @@
 local _, ns = ...
+local cfg = ns.Config
 
 local _G, pairs, unpack = _G, pairs, unpack
 local IsActionInRange = _G.IsActionInRange
@@ -15,12 +16,6 @@ local Color = {
 	Shadow = { 0, 0, 0, 1},
 }
 
-local cfg = ns.Config
-local Texture = cfg.IconTextures
-local FONT = cfg.Fonts.Actionbar
-local FONTSIZE = cfg.Actionbar.fontSize
-local StyledButts = {}
-
 local function IsSpecificButton(self, name)
 	local sbut = self:GetName():match(name)
 	if (sbut) then
@@ -30,15 +25,15 @@ local function IsSpecificButton(self, name)
 	end
 end
 
-local function CreateBackGround(button, makeBG, fBG)
-	if not button then return; end
+local function CreateBackGround(button, fBG)
+	if not button or button.Shadow then return; end
 
 	-- Shadow
 	if fBG and type(fBG) == 'table' and fBG:GetObjectType() == 'texture' then
 		fBG:ClearAllPoints()
 		fBG:SetPoint('TOPRIGHT', button, 5, 5)
 		fBG:SetPoint('BOTTOMLEFT', button, -5, -5)
-		fBG:SetTexture(Texture.Shadow)
+		fBG:SetTexture(cfg.Textures.Shadow)
 		fBG:SetVertexColor(unpack(Color.Shadow))
 		button.Shadow = fBG
 	else
@@ -46,20 +41,18 @@ local function CreateBackGround(button, makeBG, fBG)
 		shadow:SetParent(button)
 		shadow:SetPoint('TOPRIGHT', button, 5, 5)
 		shadow:SetPoint('BOTTOMLEFT', button, -5, -5)
-		shadow:SetTexture(Texture.Shadow)
+		shadow:SetTexture(cfg.Textures.Shadow)
 		shadow:SetVertexColor(unpack(Color.Shadow))
 		button.Shadow = shadow
 	end
 	
 	-- Background Texure
-	if makeBG then
-		local tex = button:CreateTexture(nil, "BACKGROUND", nil, -8)
-		tex:SetPoint('TOPRIGHT', button, 3, 3)
-		tex:SetPoint('BOTTOMLEFT', button, -3, -3)
-		tex:SetTexture(Texture.Background)
-		tex:SetVertexColor(unpack(Color.Background))
-		button.BackGround = tex
-	end
+	local tex = button:CreateTexture(nil, "BACKGROUND", nil, -8)
+	tex:SetPoint('TOPRIGHT', button, 3, 3)
+	tex:SetPoint('BOTTOMLEFT', button, -3, -3)
+	tex:SetTexture(cfg.Textures.Background)
+	tex:SetVertexColor(unpack(Color.Background))
+	return tex
 end
 
 local GetKeyText
@@ -99,35 +92,37 @@ do
 	end
 end
 
-local function ActionButtonUpdateHotkey(self, type)
+local function ActionButtonUpdateHotkey(self)
 	local hotkey = _G[self:GetName()..'HotKey']
 	local text = hotkey:GetText()
-	if not hotkey then return end
+	if cfg.ShowKeybinds or ns.Binder.shouldShowBindings then
+		if text and text ~= '' then
+			hotkey:SetText(GetKeyText(text))
+		end
+		hotkey:Show()
+	else
+		hotkey:Hide()
+	end
+
+	if self.BackGround then return; end
+
 	if (not IsSpecificButton(self, 'OverrideActionBarButton')) then
-		if cfg.Actionbar.showKeybinds or ns.Binder.shouldShowBindings then
-			if text and text ~= '' then
-				hotkey:SetText(GetKeyText(text))
-			end
-			hotkey:Show()
-		else
-			hotkey:Hide()
-		end	
-		if not StyledButts[self:GetName()] then return; end
+
 		hotkey:ClearAllPoints()
 		hotkey:SetPoint('TOPRIGHT', self, 0, -3)
-		hotkey:SetFont(FONT, FONTSIZE - 1, 'OUTLINE')
+		hotkey:SetFont(cfg.Font, cfg.FontSize - 1, 'OUTLINE')
 		hotkey:SetVertexColor(unpack(Color.HotKeyText))
 	else
 		-- Update Vehicle button
 		hotkey:ClearAllPoints()
-		hotkey:SetFont(FONT, FONTSIZE + 2, 'OUTLINE')
+		hotkey:SetFont(cfg.Font, cfg.FontSize + 2, 'OUTLINE')
 		hotkey:SetPoint('TOPRIGHT', self, -5, -6)
 		hotkey:SetVertexColor(unpack(Color.HotKeyText))
 	end
 end
 
 local function ActionBarButton(button)
-	if (not button) or (button and StyledButts[button:GetName()]) then return; end
+	if (not button) or (button and button.BackGround) then return; end
 
 	local name = button:GetName()
 	local normal = _G[name..'NormalTexture'] or button:GetNormalTexture() --Sometimes it doesnt exist
@@ -150,11 +145,11 @@ local function ActionBarButton(button)
 
 	-- Button Count (feathers, monk roll)
 	count:SetPoint('BOTTOMRIGHT', button, -2, 1)
-	count:SetFont(FONT, FONTSIZE, 'OUTLINE')
+	count:SetFont(cfg.Font, cfg.FontSize, 'OUTLINE')
 	count:SetVertexColor(unpack(Color.CountText))
 
 	-- Flash
-	flash:SetTexture(Texture.Flash)
+	flash:SetTexture(cfg.Textures.Flash)
 
 	-- Mod icon abit
 	icon:SetTexCoord(.05, .95, .05, .95)
@@ -173,28 +168,24 @@ local function ActionBarButton(button)
 	normal:SetVertexColor(unpack(Color.Normal))
 
 	-- Apply textures
-	button:SetNormalTexture(Texture.Normal)
-	button:SetCheckedTexture(Texture.Checked)
-	button:SetHighlightTexture(Texture.Highlight)
-	button:SetPushedTexture(Texture.Pushed)
+	button:SetNormalTexture(cfg.Textures.Normal)
+	button:SetCheckedTexture(cfg.Textures.Checked)
+	button:SetHighlightTexture(cfg.Textures.Highlight)
+	button:SetPushedTexture(cfg.Textures.Pushed)
 
 	button:GetCheckedTexture():SetAllPoints(normal)
 	button:GetPushedTexture():SetAllPoints(normal)
 	button:GetHighlightTexture():SetAllPoints(normal)
 
-	if not button.BackGround then
-		button.BackGround = CreateBackGround(button, true, buttonBg)
-	end
-
 	ActionButtonUpdateHotkey(button)
-	StyledButts[name] = true
+	button.BackGround = CreateBackGround(button, buttonBg)
 end
 
 local function PetStancePossessButton(button)
 	if not button then return; end
-	button:SetNormalTexture(Texture.Normal)
+	button:SetNormalTexture(cfg.Textures.Normal)
 
-	if StyledButts[button:GetName()] then return; end
+	if button.BackGround then return; end
 
 	local name = button:GetName()
 	local icon = _G[name..'Icon']
@@ -208,9 +199,9 @@ local function PetStancePossessButton(button)
 	normal:SetVertexColor(unpack(Color.Normal))
 
 	-- Apply textures
-	button:SetCheckedTexture(Texture.Checked)
-	button:SetHighlightTexture(Texture.Highlight)
-	button:SetPushedTexture(Texture.Pushed)
+	button:SetCheckedTexture(cfg.Textures.Checked)
+	button:SetHighlightTexture(cfg.Textures.Highlight)
+	button:SetPushedTexture(cfg.Textures.Pushed)
 	button:GetCheckedTexture():SetAllPoints(normal)
 	button:GetPushedTexture():SetAllPoints(normal)
 	button:GetHighlightTexture():SetAllPoints(normal)
@@ -223,46 +214,23 @@ local function PetStancePossessButton(button)
 	icon:SetPoint('TOPRIGHT', button, 1, 1)
 	icon:SetPoint('BOTTOMLEFT', button, -1, -1)
 
-	flash:SetTexture(Texture.Flash)
+	flash:SetTexture(cfg.Textures.Flash)
 
 	if IsSpecificButton(button, 'PetActionButton') then -- Pet bar sets normaltexture
 		hooksecurefunc(button, "SetNormalTexture", function(self, texture)
-			if texture and texture ~= Texture.Normal then
-				self:SetNormalTexture(Texture.Normal)
+			if texture and texture ~= cfg.Textures.Normal then
+				self:SetNormalTexture(cfg.Textures.Normal)
 			end
 		end)
 	end
 
-	if not button.BackGround then
-		button.BackGround = CreateBackGround(button, true)
-	end
-
 	ActionButtonUpdateHotkey(button)
-	StyledButts[name] = true;
+	button.BackGround = CreateBackGround(button)
 end
 
 local function LeaveVehicleButton(button)
-	if not button or (button and StyledButts[button:GetName()])then return; end
-
-	if not button.BackGround then
-		button.BackGround = CreateBackGround(button)
-	end
-
-	StyledButts[button:GetName()] = true;
-end
-
-local function MultiCastActionButton(button) -- OUTDATED
-	if not button or (button and StyledButts[button:GetName()])then return; end
-
-	button:SetNormalTexture(nil)
-	local icon = _G[button:GetName()..'Icon']
-	icon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
-
-	if not button.BackGround then
-		button.BackGround = CreateBackGround(button)
-	end
-
-	StyledButts[button:GetName()] = true
+	if not button or (button and button.BackGround)then return; end
+	button.BackGround = CreateBackGround(button)
 end
 
 local function ShowGrid(self)
@@ -301,7 +269,7 @@ local function ActionButton_Update(button, e)
 	elseif name:find('ExtraActionButton') then 
 		return; 
 	end
-	button:SetNormalTexture(Texture.Normal)
+	button:SetNormalTexture(cfg.Textures.Normal)
 end
 
 local TOOLTIP_UPDATE_TIME = _G.TOOLTIP_UPDATE_TIME
@@ -351,6 +319,15 @@ local function LoadSkins()
 	for i=1, NUM_STANCE_SLOTS do
 		PetStancePossessButton(_G["StanceButton"..i])
 	end
+	ns:RegisterEvent("UPDATE_BINDINGS", function() -- apply hotkeys to em
+		for i = 1, NUM_STANCE_SLOTS do
+			local button = _G["StanceButton"..i]
+			local key = GetBindingKey("SHAPESHIFTBUTTON"..i)
+			_G["StanceButton"..i.."HotKey"]:SetText(key)
+			ActionButtonUpdateHotkey(button)
+		end
+	end)
+
 	--possess buttons
 	for i=1, NUM_POSSESS_SLOTS do
 		PetStancePossessButton(_G["PossessButton"..i])
@@ -375,8 +352,6 @@ local function LoadSkins()
 		end
 	end
 	SpellFlyout:HookScript("OnShow", DetectFlyouts)
-
-
 end
 
-ns.RegisterEvent("PLAYER_LOGIN", LoadSkins)
+ns:RegisterEvent("PLAYER_LOGIN", LoadSkins)

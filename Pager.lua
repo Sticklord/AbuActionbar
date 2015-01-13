@@ -1,11 +1,11 @@
 local _, ns = ...
 
 local playerClass = select(2, UnitClass('player'))
-local cfg = ns.Config.ActionbarPaging
+local cfg = ns.Config
 local page
 
-if cfg[playerClass] then
-	page = cfg[playerClass]
+if cfg.ActionbarPaging[playerClass] then
+	page = cfg.ActionbarPaging[playerClass]
 else
 	return;
 end
