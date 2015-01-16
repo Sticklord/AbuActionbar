@@ -20,7 +20,7 @@ local HIDE_FRAMES = {
 	'ReputationWatchBarTexture2','ReputationXPBarTexture2',
 	'ReputationWatchBarTexture3','ReputationXPBarTexture3',
 	'MainMenuBarPageNumber',
-	--'SlidingActionBarTexture0','SlidingActionBarTexture1',
+	'SlidingActionBarTexture0','SlidingActionBarTexture1',
 	'StanceBarLeft','StanceBarMiddle','StanceBarRight',
 	'PossessBackground1','PossessBackground2',
 }
@@ -159,11 +159,8 @@ local function SetupBars()
 	IconIntroTracker:UnregisterAllEvents()
 	IconIntroTracker:Hide()
 	IconIntroTracker.Show = function() end
-
 end
 
-local nextButton = 1
-local hookedButts = {} -- Holds which flyoutbuttons are hooked, nor sure if neccessary
 local function EnableMouseOverBars()
 	-- Custom UIFrameFadeIn/Out(frame, time, startA, endA, holdTime)
 	local function Bar_OnEnter(bar)
@@ -211,14 +208,16 @@ local function EnableMouseOverBars()
 			end
 		end
 	end
+
+	local seenFlyoutButtons = 1
 	-- Fix so flyoutbuttons counts as bars
 	hooksecurefunc(SpellFlyout, "Toggle", function(self, flyoutID, parent, direction, distance, isActionBar, specID, showFullTooltip)
 		if not self:IsShown() then return end
 		local _, _, numSlots, isKnown = GetFlyoutInfo(flyoutID)
-		for i = nextButton, numSlots do
+		for i = seenFlyoutButtons, numSlots do
 			local name = 'SpellFlyoutButton'..i
 			local b = _G[name]
-			if b and not hookedButts[name] then
+			if b then
 				b:HookScript("OnEnter", function(self)
 					local flyOut = self:GetParent()
 					if flyOut.isActionBar then
@@ -236,7 +235,7 @@ local function EnableMouseOverBars()
 					end
 				end)
 			end
-			nextButton = numSlots + 1
+			seenFlyoutButtons = numSlots + 1
 		end
 	end)
 	SpellFlyout:HookScript("OnEnter", function(self)

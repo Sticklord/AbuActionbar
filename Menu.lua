@@ -279,8 +279,8 @@ local function Init()
 
 	MakeButton()
  -- This addon gets loaded late, should be good
-	if LibStub and LibStub:GetLibrary("LibDataBroker-1.1") then
-		local LDB = LibStub:GetLibrary("LibDataBroker-1.1")
+ 	local LDB = LibStub and LibStub:GetLibrary("LibDataBroker-1.1", true)
+	if LDB then
 		for k,v in LDB:DataObjectIterator() do
 			self:MakePlugin(k,v)
 			LDB.RegisterCallback(self, "LibDataBroker_AttributeChanged_"..k.."_icon", "UpdatePlugin")
