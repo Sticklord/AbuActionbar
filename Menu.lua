@@ -32,7 +32,7 @@ end
 
 local function SlideOutFrame()
 	if not AMM:IsMouseOver() then
-		AMM:AnimationSlideReturn(5)
+		AMM:AnimationSlideReturn(10)
 	end
 end
 
@@ -183,7 +183,7 @@ local function MakeButton()
 		self:GetNormalTexture():ClearAllPoints()
 		self:GetNormalTexture():SetPoint('CENTER')
 
-		if AMM.slideInfo.stage == "Finished" then
+		if AMM.slideInfo.stage == 0 then
 			AMM:AnimationSlideStart()
 		else
 			AMM:AnimationSlideReturn()
@@ -232,7 +232,7 @@ local function Init()
 	local self = AMM
 	self.loadedbuttons = {};
 	self:SetSize(304, 100)
-	self:SetPoint("TOPRIGHT", UIParent, "BOTTOMRIGHT", -290, -22) 
+	self:SetPoint("TOPLEFT", MainMenuBar, "BOTTOMRIGHT", 110, -22) 
 	self.textures = {};
 	for i = 1, 4 do
 		local t = self:CreateTexture()

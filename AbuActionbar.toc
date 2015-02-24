@@ -4,6 +4,7 @@
 ## RequiredDeps: AbuEssentials
 
 libs\AbuTheLib.lua
+defaults.lua
 CONFIG.lua
 
 ActionBar.lua

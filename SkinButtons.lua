@@ -55,49 +55,12 @@ local function CreateBackGround(button, fBG)
 	return tex
 end
 
-local GetKeyText
-do
-	local displaySubs = {
-		['s%-'] 			= 's',
-		['a%-'] 			= 'a',
-		['c%-'] 			= 'c',
-		['st%-']			= 'c',
-		['Mouse Button ']	= 'M',
-		KEY_MOUSEWHEELUP 	= 'wU',
-		KEY_MOUSEWHEELDOWN	= 'wD',
-		['Middle Mouse']	= 'M3',
-		['KEY_NUMLOCK'] 	= 'nL',
-		['Num Pad '] 		= 'n',
-		KEY_PAGEUP 			= 'pU',
-		KEY_PAGEDOWN 		= 'pD',
-		KEY_SPACE 			= 'Sp',
-		KEY_INSERT			= 'Ins',
-		KEY_HOME 			= 'Hm',
-		KEY_DELETE			= 'Del',
-		["PLUS"]    		= "+",
-		["MINUS"]   		= "-",
-		["MULTIPLY"]		= "*",
-		["DIVIDE"]  		= "/",
-		["DECIMAL"] 		= ".",
-	}
-	local gsub = string.gsub
-	function GetKeyText(key)
-		if not key then
-			return ""
-		end
-		for k, v in pairs(displaySubs) do
-			key = gsub(key, k, v)
-		end
-		return key
-	end
-end
-
 local function ActionButtonUpdateHotkey(self)
 	local hotkey = _G[self:GetName()..'HotKey']
 	local text = hotkey:GetText()
 	if cfg.ShowKeybinds or ns.Binder.shouldShowBindings then
 		if text and text ~= '' then
-			hotkey:SetText(GetKeyText(text))
+			hotkey:SetText(ns.GetKeyText(text))
 		end
 		hotkey:Show()
 	else
@@ -107,13 +70,11 @@ local function ActionButtonUpdateHotkey(self)
 	if self.BackGround then return; end
 
 	if (not IsSpecificButton(self, 'OverrideActionBarButton')) then
-
 		hotkey:ClearAllPoints()
 		hotkey:SetPoint('TOPRIGHT', self, 0, -3)
 		hotkey:SetFont(cfg.Font, cfg.FontSize - 1, 'OUTLINE')
 		hotkey:SetVertexColor(unpack(Color.HotKeyText))
 	else
-		-- Update Vehicle button
 		hotkey:ClearAllPoints()
 		hotkey:SetFont(cfg.Font, cfg.FontSize + 2, 'OUTLINE')
 		hotkey:SetPoint('TOPRIGHT', self, -5, -6)
@@ -122,7 +83,7 @@ local function ActionButtonUpdateHotkey(self)
 end
 
 local function ActionBarButton(button)
-	if (not button) or (button and button.BackGround) then return; end
+	if (not button) then return; end
 
 	local name = button:GetName()
 	local normal = _G[name..'NormalTexture'] or button:GetNormalTexture() --Sometimes it doesnt exist
@@ -346,12 +307,17 @@ local function LoadSkins()
 	SpellFlyoutBackgroundEnd:SetTexture(nil)
 	SpellFlyoutHorizontalBackground:SetTexture(nil)
 	SpellFlyoutVerticalBackground:SetTexture(nil)
-	local function DetectFlyouts(self)
-		for i = 1, 10 do
+
+	local nextFlyout = 1
+	hooksecurefunc(SpellFlyout, "Toggle", function(self, id, parent)
+		if (not self:IsShown()) then return; end
+
+		local _, _, numSlots = GetFlyoutInfo(id)
+		for i = nextFlyout, numSlots do
 			ActionBarButton(_G["SpellFlyoutButton"..i])
 		end
-	end
-	SpellFlyout:HookScript("OnShow", DetectFlyouts)
+		nextFlyout = numSlots
+	end)
 end
 
 ns:RegisterEvent("PLAYER_LOGIN", LoadSkins)

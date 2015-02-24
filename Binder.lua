@@ -32,6 +32,7 @@ do
 		['Middle Mouse']	= 'M3',
 		['KEY_NUMLOCK'] 	= 'nL',
 		['Num Pad '] 		= 'n',
+		['NUMPAD'] 			= 'n',
 		KEY_PAGEUP 			= 'pU',
 		KEY_PAGEDOWN 		= 'pD',
 		KEY_SPACE 			= 'Sp',
@@ -55,6 +56,7 @@ do
 		return key
 	end
 end
+ns.GetKeyText = GetKeyText
 
 local keyMap = {
 	['LSHIFT'] = 'IGNORE',
