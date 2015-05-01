@@ -45,7 +45,7 @@ local function CreateBackGround(button, fBG)
 		shadow:SetVertexColor(unpack(Color.Shadow))
 		button.Shadow = shadow
 	end
-	
+
 	-- Background Texure
 	local tex = button:CreateTexture(nil, "BACKGROUND", nil, -8)
 	tex:SetPoint('TOPRIGHT', button, 3, 3)
@@ -197,14 +197,19 @@ end
 local function ShowGrid(self)
 	local normal = _G[self:GetName()..'NormalTexture']
 	if (normal) then
-		normal:SetAlpha(1) 
+		normal:SetAlpha(1)
 	end
 end
 
 local function ActionButton_UpdateUsable(self)
 	local normal = _G[self:GetName()..'NormalTexture']
 	if (normal) then
-		normal:SetVertexColor(unpack(Color.Normal)) 
+		if OneRingLib then
+			local r, g, b = OneRingLib.ext.OPieUI:GetTexColor(_G[self:GetName()..'Icon']:GetTexture())
+        	normal:SetVertexColor(r, g, b)
+    	else
+			normal:SetVertexColor(unpack(Color.Normal))
+		end
 	end
 
 	local isUsable, notEnoughMana = IsUsableAction(self.action)
@@ -227,10 +232,19 @@ local function ActionButton_Update(button, e)
 
 	if name:find('MultiCast') then
 		return;
-	elseif name:find('ExtraActionButton') then 
-		return; 
+	elseif name:find('ExtraActionButton') then
+		return;
 	end
-	button:SetNormalTexture(cfg.Textures.Normal)
+
+	if OneRingLib then
+		local r, g, b = OneRingLib.ext.OPieUI:GetTexColor(_G[name..'Icon']:GetTexture())
+        button:GetNormalTexture():SetVertexColor(r, g, b)
+        button:GetHighlightTexture():SetVertexColor(r, g, b)
+        button:GetPushedTexture():SetVertexColor(r, g, b)
+        button:GetCheckedTexture():SetVertexColor(r, g, b)
+    else
+		button:SetNormalTexture(cfg.Textures.Normal)
+	end
 end
 
 local TOOLTIP_UPDATE_TIME = _G.TOOLTIP_UPDATE_TIME
@@ -300,7 +314,7 @@ local function LoadSkins()
 
 	-- Showgrid hides border, lets fix
 	hooksecurefunc("ActionButton_ShowGrid", ShowGrid)
-	-- Update Hotkey	
+	-- Update Hotkey
 	hooksecurefunc("ActionButton_UpdateHotkeys", ActionButtonUpdateHotkey)
 
 	-- Detect Flyouts
