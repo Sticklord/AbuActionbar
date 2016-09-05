@@ -3,7 +3,7 @@ local Gcfg = AbuGlobal.GlobalConfig
 
 ns.Config = {
 	PrintBindings = false,
-	ShowKeybinds = false,
+	ShowKeybinds = true,
 
 	Font = Gcfg.Fonts.Actionbar,
 	FontSize = 19,

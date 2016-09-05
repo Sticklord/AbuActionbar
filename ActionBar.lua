@@ -17,8 +17,7 @@ local HIDE_FRAMES = {
 	'ActionBarUpButton', 'ActionBarDownButton',
 	'MainMenuBarBackpackButton','CharacterBag0Slot','CharacterBag1Slot','CharacterBag2Slot','CharacterBag3Slot',
 	'MainMenuBarTexture2','MainMenuMaxLevelBar2','MainMenuBarTexture3','MainMenuMaxLevelBar3',
-	'ReputationWatchBarTexture2','ReputationXPBarTexture2',
-	'ReputationWatchBarTexture3','ReputationXPBarTexture3',
+	ArtifactWatchBar.StatusBar.WatchBarTexture2, ArtifactWatchBar.StatusBar.WatchBarTexture3,
 	'MainMenuBarPageNumber',
 	'SlidingActionBarTexture0','SlidingActionBarTexture1',
 	'StanceBarLeft','StanceBarMiddle','StanceBarRight',
@@ -26,11 +25,11 @@ local HIDE_FRAMES = {
 }
 
 local SHORTEN_FRAMES = {
-    'MainMenuBar',
-    'MainMenuExpBar',
-    'MainMenuBarMaxLevelBar',
-    'ReputationWatchBar',
-    'ReputationWatchStatusBar',
+    MainMenuBar,
+    MainMenuExpBar,
+    MainMenuBarMaxLevelBar,
+    ArtifactWatchBar,
+    ArtifactWatchBar.StatusBar,
 }
 
 
@@ -41,7 +40,7 @@ local function CreateShortBars()
 	end
 
 	for _, name in pairs(HIDE_FRAMES) do
-		local object = _G[name]
+		local object = _G[name] or name
 		if not object then print(name) end
 		if (object:IsObjectType('Frame') or object:IsObjectType('Button')) then
 			object:UnregisterAllEvents()
@@ -54,8 +53,8 @@ local function CreateShortBars()
 		object:Hide()
 	end
 	--  [[  Shorten textures  ]]  --
-	for _, name in pairs(SHORTEN_FRAMES) do
-		_G[name]:SetWidth(512)
+	for _, f in pairs(SHORTEN_FRAMES) do
+		f:SetWidth(512)
 	end
 
 	    -- remove divider
@@ -109,10 +108,11 @@ local function SetupBars()
 	end
 
 	--  [[  Rep Bar  ]]  --
-	ReputationWatchStatusBarText:SetFont('Fonts\\ARIALN.ttf', 14, 'THINOUTLINE')
-	ReputationWatchStatusBarText:SetShadowOffset(0, 0)
-	ReputationWatchStatusBarText:SetAlpha(0)
-	EnableFading(ReputationWatchBar, ReputationWatchStatusBarText)
+	local artText = ArtifactWatchBar.OverlayFrame.Text
+	artText:SetFont('Fonts\\ARIALN.ttf', 14, 'THINOUTLINE')
+	artText:SetShadowOffset(0, 0)
+	artText:SetAlpha(0)
+	EnableFading(ArtifactWatchBar, artText)
 
 	--  [[  Exp Bar  ]]  --
 	MainMenuBarExpText:SetFont('Fonts\\ARIALN.ttf', 14, 'THINOUTLINE')
