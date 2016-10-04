@@ -6,14 +6,14 @@ local IsActionInRange = _G.IsActionInRange
 local IsUsableAction = _G.IsUsableAction
 
 local Color = {
-	Normal = { 1, 1, 1 , 1},
+	Normal = { 0.7, 0.7, 0.6 , 1},
 	OutOfRange = { 1, 0.2, 0.2 , 1},
 	OutOfMana = { 0.3, 0.3, 1, 1},
 	NotUsable = { 0.35, 0.35, 0.35, 1},
 	HotKeyText = { 0.6, 0.6, 0.6, 1},
 	CountText = { 1, 1, 1, 1},
-	Background = { 1, 1, 1, 1},
-	Shadow = { 0, 0, 0, 1},
+	Background = {0.2,0.2,0.2,0.8},
+	Shadow = { 0, 0, 0, 0.7},
 }
 
 local function IsSpecificButton(self, name)
@@ -48,21 +48,20 @@ local function CreateBackGround(button, fBG)
 
 	-- Background Texure
 	local tex = button:CreateTexture(nil, "BACKGROUND", nil, -8)
-	tex:SetPoint('TOPRIGHT', button, 3, 3)
-	tex:SetPoint('BOTTOMLEFT', button, -3, -3)
+	tex:SetAllPoints(button)
 	tex:SetTexture(cfg.Textures.Background)
 	tex:SetVertexColor(unpack(Color.Background))
 	return tex
 end
 
-local function ActionButtonUpdateHotkey(self)
+local function ActionButtonUpdateHotkey(self, actionButtonType)
 	local hotkey = _G[self:GetName()..'HotKey']
 	local text = hotkey:GetText()
 	if cfg.ShowKeybinds or ns.Binder.shouldShowBindings then
-		if text and text ~= '' then
+		if text and text ~= '' and text ~= RANGE_INDICATOR then
 			hotkey:SetText(ns.GetKeyText(text))
+			hotkey:Show()
 		end
-		hotkey:Show()
 	else
 		hotkey:Hide()
 	end
@@ -195,9 +194,8 @@ local function LeaveVehicleButton(button)
 end
 
 local function ShowGrid(self)
-	local normal = _G[self:GetName()..'NormalTexture']
-	if (normal) then
-		normal:SetAlpha(1)
+	if (self.NormalTexture) then
+		self.NormalTexture:SetAlpha(1)
 	end
 end
 
@@ -272,66 +270,58 @@ function ns.ToggleBindings(enable)
 	end
 end
 
-local function LoadSkins()
-	for i = 1, NUM_ACTIONBAR_BUTTONS do
-		ActionBarButton(_G["ActionButton"..i])
-		ActionBarButton(_G["MultiBarBottomLeftButton"..i])
-		ActionBarButton(_G["MultiBarBottomRightButton"..i])
-		ActionBarButton(_G["MultiBarRightButton"..i])
-		ActionBarButton(_G["MultiBarLeftButton"..i])
-	end
-
-	for i = 1, NUM_OVERRIDE_BUTTONS do
-		ActionBarButton(_G["OverrideActionBarButton"..i])
-	end
-	--style leave button
-	LeaveVehicleButton(OverrideActionBarLeaveFrameLeaveButton)
-	--petbar buttons
-	for i=1, NUM_PET_ACTION_SLOTS do
-		PetStancePossessButton(_G["PetActionButton"..i])
-	end
-	--stancebar buttons
-	for i=1, NUM_STANCE_SLOTS do
-		PetStancePossessButton(_G["StanceButton"..i])
-	end
-	ns:RegisterEvent("UPDATE_BINDINGS", function() -- apply hotkeys to em
-		for i = 1, NUM_STANCE_SLOTS do
-			local button = _G["StanceButton"..i]
-			local key = GetBindingKey("SHAPESHIFTBUTTON"..i)
-			_G["StanceButton"..i.."HotKey"]:SetText(key)
-			ActionButtonUpdateHotkey(button)
-		end
-	end)
-
-	--possess buttons
-	for i=1, NUM_POSSESS_SLOTS do
-		PetStancePossessButton(_G["PossessButton"..i])
-	end
-
-	hooksecurefunc("ActionButton_Update", ActionButton_Update)
-	hooksecurefunc("ActionButton_OnUpdate", ActionButton_OnUpdate)
-	hooksecurefunc("ActionButton_UpdateUsable", ActionButton_UpdateUsable)
-
-	-- Showgrid hides border, lets fix
-	hooksecurefunc("ActionButton_ShowGrid", ShowGrid)
-	-- Update Hotkey
-	hooksecurefunc("ActionButton_UpdateHotkeys", ActionButtonUpdateHotkey)
-
-	-- Detect Flyouts
-	SpellFlyoutBackgroundEnd:SetTexture(nil)
-	SpellFlyoutHorizontalBackground:SetTexture(nil)
-	SpellFlyoutVerticalBackground:SetTexture(nil)
-
-	local nextFlyout = 1
-	hooksecurefunc(SpellFlyout, "Toggle", function(self, id, parent)
-		if (not self:IsShown()) then return; end
-
-		local _, _, numSlots = GetFlyoutInfo(id)
-		for i = nextFlyout, numSlots do
-			ActionBarButton(_G["SpellFlyoutButton"..i])
-		end
-		nextFlyout = numSlots
-	end)
+for button in ns.actionbutton_iterator() do
+	ActionBarButton(button)
 end
 
-ns:RegisterEvent("PLAYER_LOGIN", LoadSkins)
+for i = 1, NUM_OVERRIDE_BUTTONS do
+	ActionBarButton(_G["OverrideActionBarButton"..i])
+end
+--possess buttons
+for i=1, NUM_POSSESS_SLOTS do
+	PetStancePossessButton(_G["PossessButton"..i])
+end
+--petbar buttons
+for i=1, NUM_PET_ACTION_SLOTS do
+	PetStancePossessButton(_G["PetActionButton"..i])
+end
+--stancebar buttons
+for i=1, NUM_STANCE_SLOTS do
+	PetStancePossessButton(_G["StanceButton"..i])
+end
+ns.eventFrame:RegisterEvent'UPDATE_BINDINGS'
+ns.eventFrame.UPDATE_BINDINGS = function() -- apply hotkeys to em
+	for i = 1, NUM_STANCE_SLOTS do
+		local button = _G["StanceButton"..i]
+		local key = GetBindingKey("SHAPESHIFTBUTTON"..i)
+		_G["StanceButton"..i.."HotKey"]:SetText(key)
+		ActionButtonUpdateHotkey(button)
+	end
+end
+--style leave button
+LeaveVehicleButton(OverrideActionBarLeaveFrameLeaveButton)
+
+hooksecurefunc("ActionButton_Update", ActionButton_Update)
+hooksecurefunc("ActionButton_OnUpdate", ActionButton_OnUpdate)
+hooksecurefunc("ActionButton_UpdateUsable", ActionButton_UpdateUsable)
+
+-- Showgrid hides border, lets fix
+hooksecurefunc("ActionButton_ShowGrid", ShowGrid)
+-- Update Hotkey
+hooksecurefunc("ActionButton_UpdateHotkeys", ActionButtonUpdateHotkey)
+
+-- Detect Flyouts
+SpellFlyoutBackgroundEnd:SetTexture(nil)
+SpellFlyoutHorizontalBackground:SetTexture(nil)
+SpellFlyoutVerticalBackground:SetTexture(nil)
+
+local nextFlyout = 1
+hooksecurefunc(SpellFlyout, "Toggle", function(self, id, parent)
+	if (not self:IsShown()) then return; end
+
+	local _, _, numSlots = GetFlyoutInfo(id)
+	for i = nextFlyout, numSlots do
+		ActionBarButton(_G["SpellFlyoutButton"..i])
+	end
+	nextFlyout = numSlots
+end)

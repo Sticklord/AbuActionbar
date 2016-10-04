@@ -4,8 +4,6 @@ local _, ns = ...
 -- A simple, SIMPLE LDB
 
 local AMM = CreateFrame("Frame", "AbuMicroMenu", UIParent)
-local button = CreateFrame('Button', nil, UIParent)
-local nop = function() end
 local BUTTONS
 
 local function CreateDefaultList()
@@ -32,7 +30,7 @@ end
 
 local function SlideOutFrame()
 	if not AMM:IsMouseOver() then
-		AMM:AnimationSlideReturn(10)
+		AMM:AnimationSlideReturn(2)
 	end
 end
 
@@ -41,6 +39,7 @@ local function SlideCancel()
 		AMM:AnimationSlideStart()
 	end
 end
+
 
 function AMM:CreateAddonButton(addon)
 	local b = CreateFrame("Button", self:GetName()..addon.."Button", self, "MainMenuBarMicroButton")
@@ -162,14 +161,15 @@ end
 
 local function MakeButton()
 
+	local button = CreateFrame('Button', nil, UIParent)
 	button:SetFrameStrata('HIGH')
-	button:SetToplevel(true)
 	button:SetSize(30, 30)
 	button:SetPoint('BOTTOM', UIParent, 265, -4)
 	button:RegisterForClicks('Anyup')
 
 	button:SetNormalTexture('Interface\\AddOns\\AbuEssentials\\Textures\\picomenu\\picomenuNormal')
 	button:GetNormalTexture():SetSize(30, 30)
+	button:GetNormalTexture():SetPoint('CENTER')
 
 	button:SetHighlightTexture('Interface\\AddOns\\AbuEssentials\\Textures\\picomenu\\picomenuHighlight')
 	button:GetHighlightTexture():SetAllPoints(button:GetNormalTexture())
@@ -203,53 +203,75 @@ local function MakeButton()
 	button:SetScript('OnLeave', function() GameTooltip:Hide() end)
 end
 
+local texture = [[Interface\AddOns\AbuEssentials\Textures\asd.tga]]
 local TexData = {
 	--LEFT
-	[1] = { t = "Interface\\PaperDollInfoFrame\\UI-Character-Honor-BottomRight",
-			s =  {128, 100},
-			p = {"TOPLEFT", -74, 42}, 
-			c = {1, 0, 1, 1-100/128}
+	[1] = { t = texture,
+			s =  {50, 50},
+			p = {"TOPLEFT", false, false, -13, 13}, 
+			c = {0, 1/3, 0, 1/3}
 	},
-	[2] = { t = "Interface\\PaperDollInfoFrame\\UI-Character-Honor-BottomRight",
-			s =  {128, 128*(1-100/128)+15},
-			p = {"TOPLEFT", -74, -58},
-			c = {1, 0, (1-(100/128*.85)), 0}
+	[2] = { t = texture,
+			s =  {50,100},
+			p = {"TOPLEFT", 1, 'BOTTOMLEFT', 0, 0},
+			c = {0, 1/3, 1/3, 2/3}
+	},
+	--MID
+	[3] = { t = texture,
+			s =  {218, 50},
+			p = {"TOPLEFT", 1, 'TOPRIGHT', 0, 0},
+			c = {1/3, 2/3, 0, 1/3}
 	},
 	--RIGHT
-	[3] = { t = "Interface\\PaperDollInfoFrame\\UI-Character-Honor-BottomLeft",
-			s =  {260, 100},
-			p = {"TOPLEFT", 54, 42},
-			c = {1, 0, 1, 1-100/128}
+	[4] = { t = texture,
+			s =  {50, 50},
+			p = {"TOPLEFT", 3, "TOPRIGHT", 0, 0},
+			c = {2/3, 1, 0, 1/3}
 	},
-	[4] = { t = "Interface\\PaperDollInfoFrame\\UI-Character-Honor-BottomLeft",
-			s =  {260, 128*(1-100/128)+15},
-			p = {"TOPLEFT", 54, -58},
-			c = {1, 0, (1-(100/128*.85)), 0}
+	[5] = { t = texture,
+			s =  {50, 100},
+			p = {"TOPLEFT", 4, "BOTTOMLEFT", 0, 0},
+			c = {2/3, 1, 1/3, 2/3}
 	},
 }
 
-local function Init()
+local function rotate(l, r, t, b)
+	local ULx, ULy = l, b
+	local LLx, LLy = r, b
+	local URx, URy = l, t
+	local LRx, LRy = r, t
+	return ULx, ULy, LLx, LLy, URx, URy, LRx, LRy
+end
+
+AMM:RegisterEvent("PLAYER_LOGIN")
+AMM:SetScript('OnEvent', function()
 	local self = AMM
 	self.loadedbuttons = {};
-	self:SetSize(304, 100)
+	self:SetSize(290, 100)
 	self:SetPoint("TOPLEFT", MainMenuBar, "BOTTOMRIGHT", 110, -22) 
 	self.textures = {};
-	for i = 1, 4 do
-		local t = self:CreateTexture()
+
+	self.bg = self:CreateTexture(nil,'BACKGROUND')
+	self.bg:SetTexture("Interface\\Common\\bluemenu-main", true,true)
+	self.bg:SetTexCoord(rotate(0.00390625, 0.82421875, 0.18554688, 0.58984375))
+	self.bg:SetAllPoints()
+
+	for i = 1, #TexData do
+		local t = self:CreateTexture(nil,'BORDER')
 		local d = TexData[i]
 		t:SetTexture(d.t)
 		t:SetSize(d.s[1], d.s[2])
-		t:SetPoint(d.p[1], d.p[2], d.p[3])
+		t:SetPoint(d.p[1], d.p[2] and self.textures[d.p[2]] or self, d.p[3] or d.p[1], d.p[4], d.p[5])
 		t:SetTexCoord(unpack(d.c))
 		self.textures[i] = t
 	end
 
 	CharacterMicroButton:ClearAllPoints()
-	CharacterMicroButton:SetPoint('TOPLEFT', self, 0, -18)
+	CharacterMicroButton:SetPoint('TOPLEFT', AMM, 2, -20)
 	hooksecurefunc('MoveMicroButtons', function(anchor, achorTo, relAnchor, x, y, isStacked)
 		if (not isStacked) then
 			CharacterMicroButton:ClearAllPoints()
-			CharacterMicroButton:SetPoint('TOPLEFT', AMM, 0, -18)
+			CharacterMicroButton:SetPoint('TOPLEFT', AMM, 2, -20)
 			for k,button in pairs(AMM.loadedbuttons) do
 				button:Show()
 			end
@@ -268,7 +290,17 @@ local function Init()
         end
     end
 
-	AbuGlobal.SetupFrameForSliding(self, .5, 'Y', 100)
+	ns.SetupFrameForSliding(self, .5, 'Y', 100)
+
+	for k, v in pairs(MAIN_MENU_MICRO_ALERT_PRIORITY) do
+		local alert = _G[v]
+		hooksecurefunc(alert, 'Show', function() AMM:AnimationSlideStart() end)
+		hooksecurefunc(alert, 'Hide', function() AMM:AnimationSlideReturn(2) end)
+
+		if alert:IsShown() then
+			AMM:AnimationSlideStart()
+		end
+	end
 
 	self:RegisterEvent("ADDON_LOADED")
 	self:SetScript("OnEvent", self.UpdateButtons)
@@ -278,7 +310,7 @@ local function Init()
 	self:SetScript("OnEnter", SlideCancel)
 
 	MakeButton()
- -- This addon gets loaded late, should be good
+ 	-- This addon gets loaded late, should be good
  	local LDB = LibStub and LibStub:GetLibrary("LibDataBroker-1.1", true)
 	if LDB then
 		for k,v in LDB:DataObjectIterator() do
@@ -288,6 +320,4 @@ local function Init()
 		end
     	LDB.RegisterCallback(self, "LibDataBroker_DataObjectCreated", "MakePlugin")
 	end
-end
-
-ns:RegisterEvent("PLAYER_LOGIN", Init)
+end)

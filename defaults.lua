@@ -35,9 +35,9 @@ ns.Config = {
 	},
 
 	FadeOutBars = { -- Fade these bars out if they're set to true.
-		['MultiBarLeft'] = true,
-		['MultiBarRight'] = true,
-		['MultiBarBottomRight'] = false,
+		['MultiBarLeft'] = 0.2,
+		['MultiBarRight'] = 0,
+		['MultiBarBottomRight'] = 0,
 	},
 
 	ActionbarPaging = { -- Change bar on different conditions, like tons of macros would do
@@ -51,10 +51,10 @@ ns.Config = {
 		-- 8	Warrior Defensive Stance/Rogue Shadow Dance/Monk Sturdy Ox
 		-- 9	Druid Bear Form/Warrior Berserker Stance/Monk Wise Serpent
 		-- 10	Druid Moonkin Form
-		['MONK']    = '[help]2;[mod:alt]2;1',
-		['PRIEST']  = '[help]2;[mod:alt]2;1',
-		['PALADIN'] = '[help]2;[mod:alt]2;1',
-		['SHAMAN']  = '[help]2;[mod:alt]2;1',
+		['MONK']    = '[help]2;[mod:alt]2;',
+		['PRIEST']  = '[help]2;[mod:alt]2;',
+		['PALADIN'] = '[help]2;[mod:alt]2;',
+		['SHAMAN']  = '[help]2;[mod:alt]2;',
 		['DRUID']   = '[help,nostance:1/2/3/4]2;[mod:alt]2;[stance:2]7;[stance:1]9;',
 		--['ROGUE']   = '[stance:1]7;[stance:3]7;1',
 	},

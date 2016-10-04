@@ -126,7 +126,7 @@ end
 local function SetBindings(b, key, command)
 	SetBinding(key, command)
 	if cfg.PrintBindings then
-		ns:Print(key.." bound to "..b.name..".")
+		ns.Print(key.." bound to "..b.name..".")
 	end
 end
 
@@ -136,7 +136,7 @@ local function ClearBindings(b, keys)
 			SetBinding(key)
 		end
 		if cfg.PrintBindings then
-			ns:Print('Cleared all bindings for: '..b.name..".")
+			ns.Print('Cleared all bindings for: '..b.name..".")
 		end
 	end
 end
@@ -218,11 +218,21 @@ function Binder:Listener(key)
 	self:Update(self.button, self.bType)
 end
 
+function Binder:ToggleGrid(show)
+	for button in ns.actionbutton_iterator() do
+		for i = 1, 12 do
+			button:SetAttribute("showgrid", show and 1 or 0)
+			ActionButton_ShowGrid(button)
+		end
+	end
+end
+
 function Binder:StartBinding()
-	if InCombatLockdown() then return ns:Print("Can't bind in combat!") end
+	if InCombatLockdown() then return ns.Print("Can't bind in combat!") end
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
-	ns:Print('Starting binding mode.')
+	ns.Print('Starting binding mode.')
 	self.isBinding = true
+	self:ToggleGrid(self.isBinding)
 	self:UpdateButtons()
 end
 
@@ -236,12 +246,13 @@ function Binder:StopBinding(save)
 	if self.isBinding then
 		if save then
 			SaveBindings(2)
-			ns:Print('Bindings |cff00ff00saved|r.')
+			ns.Print('Bindings |cff00ff00saved|r.')
 		else
 			LoadBindings(2)
-			ns:Print('Bindings |cffff0000discarded|r.')
+			ns.Print('Bindings |cffff0000discarded|r.')
 		end
 		self.isBinding = false
+		self:ToggleGrid(self.isBinding)
 		self:HideFrame()
 		self:UnregisterEvent("PLAYER_REGEN_DISABLED")
 	end
@@ -424,8 +435,8 @@ local function RegisterFlyouts()
 	Binder:UpdateFlyoutText()
 end
 
-local function LoadBinder()
-	local self = Binder
+Binder:RegisterEvent('PLAYER_LOGIN')
+Binder:SetScript('OnEvent', function(self)
 	if self.loaded then return end
 	
 	SetupSpellButton()
@@ -446,7 +457,7 @@ local function LoadBinder()
 	self:EnableMouseWheel(true)
 	self.texture = self:CreateTexture()
 	self.texture:SetAllPoints(self)
-	self.texture:SetTexture(0, 0, 0, .25)
+	self.texture:SetColorTexture(0, 0, 0, .25)
 	self:Hide()
 
 	self:SetScript("OnEvent", function(self)
@@ -500,6 +511,4 @@ local function LoadBinder()
 	hooksecurefunc(SpellFlyout, "Toggle", RegisterFlyouts)
 
 	self.loaded = true
-end
-
-ns:RegisterEvent("PLAYER_LOGIN", LoadBinder)
+end)

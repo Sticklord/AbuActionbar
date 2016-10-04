@@ -3,6 +3,7 @@
 ## Author: Abu
 ## RequiredDeps: AbuEssentials
 
+slider.lua
 libs\AbuTheLib.lua
 defaults.lua
 CONFIG.lua
